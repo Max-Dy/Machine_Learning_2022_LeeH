@@ -153,13 +153,13 @@ def trainer(train_loader, valid_loader, model, config, device):
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config = {
-    'seed': 5201314, 'select_all': True, "valid_ratio": 0.2, "n_epochs": 3000, "batch_size": 256, "learning_rate": 1e-6,
+    'seed': 5201314, 'select_all': True, "valid_ratio": 0.2, "n_epochs": 3000, "batch_size": 256, "learning_rate": 1e-5,
     'early_stop': 400, "save_path": './models/model.ckpt'
 }
 
 # load data
 same_seed(config['seed'])
-train_data, test_data = pd.read_csv('./covid.train.csv').values, pd.read_csv('./covid.test.csv').values
+train_data, test_data = pd.read_csv('./covid.train_new.csv').values, pd.read_csv('./covid.test_un.csv').values
 # .values---transfer DataFrame to nparray while get rid of listname&index
 train_data, valid_data = train_valid_split(train_data, config['valid_ratio'], config['seed'])
 
