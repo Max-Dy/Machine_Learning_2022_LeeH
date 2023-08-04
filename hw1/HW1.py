@@ -93,14 +93,29 @@ def select_feature(t_data, v_data, test_data, select_all=True):
     if select_all:
         feat_idx = list(range(row_x_t.shape[1]))  # train data include a batch
     else:
-        feat_idx = [0, 1, 2, 3, 4]
+        # 02,
+        # l1 = [i for i in range(0, 37)]
+        # l2 = [i + 41 for i in range(0, 12)]
+        # l3 = [i + 57 for i in range(0, 12)]
+        # l4 = [i + 73 for i in range(0, 12)]
+        # l5 = [i + 89 for i in range(0, 12)]
+        # l6 = [i + 105 for i in range(0, 12)]
+        # 03
+        # l1 = [i for i in range(0, 49)]
+        # l2 = [i + 52 for i in range(0, 13)]
+        # l3 = [i + 68 for i in range(0, 13)]
+        # l4 = [i + 84 for i in range(0, 13)]
+        # l5 = [i + 100 for i in range(0, 13)]
+        # l6 = [i + 116 for i in range(0, 1)]
+        # feat_idx = l1 + l2[:] + l3[:] + l4[:] + l5[:] + l6[:]
+        feat_idx = [i + 37 for i in range(117 - 37)]
     return row_x_t[:, feat_idx], row_x_v[:, feat_idx], row_x_test[:, feat_idx], y_t, y_v
 
 
 # train
 
 def trainer(train_loader, valid_loader, model, config, device):
-    criterion = nn.MSELoss(reduction='mean')  # 1
+    criterion = nn.MSELoss(reduction='mean')  # 1nn
     optimizer = torch.optim.SGD(model.parameters(), lr=config['learning_rate'], momentum=0.9)  # 2
     writer = SummaryWriter()  # to draw loss during trainning
 
@@ -125,7 +140,7 @@ def trainer(train_loader, valid_loader, model, config, device):
             train_pbar.set_description(f'Epoch [{epoch + 1}/{n_epochs}]')
             train_pbar.set_postfix({'loss': loss.detach().item()})
         mean_train_loss = sum(loss_record) / len(loss_record)
-        writer.add_scalar('Loss/train', mean_train_loss, step)
+        writer.add_scalar('Loss/Train', mean_train_loss, step)
 
         model.eval()  # validation in the same epoch
         loss_record = []
@@ -153,8 +168,9 @@ def trainer(train_loader, valid_loader, model, config, device):
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config = {
-    'seed': 5201314, 'select_all': True, "valid_ratio": 0.2, "n_epochs": 3000, "batch_size": 256, "learning_rate": 1e-5,
-    'early_stop': 400, "save_path": './models/model.ckpt'
+    'seed': 5201314, 'select_all': False, "valid_ratio": 0.20, "n_epochs": 3000, "batch_size": 128,
+    "learning_rate": 1e-5,
+    'early_stop': 400, "save_path": './models/model13.ckpt'
 }
 
 # load data
@@ -176,6 +192,8 @@ train_dataset, valid_dataset, test_dataset = COVID19Dataset(x_train, y_train), C
 train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
 valid_loader = DataLoader(valid_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False, pin_memory=True)
+
+# one validation dataset in this case.
 
 if __name__ == '__main__':
     model = My_Model(input_dim=x_train.shape[1]).to(device)
