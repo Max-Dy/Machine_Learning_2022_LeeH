@@ -2,7 +2,12 @@ import math
 import numpy as np
 import pandas as pd
 import os
+import tensorflow as tf
+# damn stupid today! debug for a long time when tf is not even installed.
 import csv
+
+import tensorboard
+from sympy.utilities.iterables import runs
 from tqdm import tqdm  # for showing of the
 
 import torch
@@ -23,7 +28,8 @@ def same_seed(seed):
 def train_valid_split(data_set, valid_ratio, seed):
     v_size = int(valid_ratio * len(data_set))
     t_size = len(data_set) - v_size
-    t_set, v_set = random_split(data_set, [t_size, v_size], generator=torch.Generator().manual_seed(seed))
+    t_set, v_set = random_split(data_set, [t_size, v_size],
+                                generator=torch.Generator().manual_seed(seed))  # random_split
     return np.array(t_set), np.array(v_set)
 
 
@@ -60,11 +66,13 @@ class COVID19Dataset(Dataset):
 
 # model
 class My_Model(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim):  # here input dim refers to how many features in one training data, not batch size
+        # question: how to work on a batch of training data
+        # dataloder generate a batch of x and feed to the model
         super(My_Model, self).__init__()
         self.layers = nn.Sequential(
-            nn.Linear(input_dim, 16),
-            nn.ReLU(),
+            nn.Linear(input_dim, 16),  # x (3,1), W (1, 3), --- Wx (1, 1), fully connection and shrimped
+            nn.ReLU(),  # unlinear change
             nn.Linear(16, 8),
             nn.ReLU(),
             nn.Linear(8, 1)  # here for each input, output is a scalar
@@ -94,7 +102,7 @@ def select_feature(t_data, v_data, test_data, select_all=True):
 def trainer(train_loader, valid_loader, model, config, device):
     criterion = nn.MSELoss(reduction='mean')  # 1
     optimizer = torch.optim.SGD(model.parameters(), lr=config['learning_rate'], momentum=0.9)  # 2
-    writer = SummaryWriter()
+    writer = SummaryWriter()  # to draw loss during trainning
 
     if not os.path.isdir('./models'):
         os.makedirs('./models')
@@ -103,7 +111,7 @@ def trainer(train_loader, valid_loader, model, config, device):
     for epoch in range(n_epochs):  # 3
         model.train()  # 4
         loss_record = []
-        train_pbar = tqdm(train_loader, position=0, leave=True)
+        train_pbar = tqdm(train_loader, position=0, leave=True)  # leave:if save the bar after loop
         for x, y in train_pbar:  # 5
             optimizer.zero_grad()  # 5
             x, y = x.to(device), y.to(device)  # 6
@@ -119,11 +127,11 @@ def trainer(train_loader, valid_loader, model, config, device):
         mean_train_loss = sum(loss_record) / len(loss_record)
         writer.add_scalar('Loss/train', mean_train_loss, step)
 
-        model.eval()
+        model.eval()  # validation in the same epoch
         loss_record = []
         for x, y in valid_loader:
             x, y = x.to(device), y.to(device)
-            with torch.no_grad():
+            with torch.no_grad():  # validation no_grade
                 pred = model(x)
                 loss = criterion(pred, y)
             loss_record.append(loss.detach().item())
@@ -152,6 +160,7 @@ config = {
 # load data
 same_seed(config['seed'])
 train_data, test_data = pd.read_csv('./covid.train.csv').values, pd.read_csv('./covid.test.csv').values
+# .values---transfer DataFrame to nparray while get rid of listname&index
 train_data, valid_data = train_valid_split(train_data, config['valid_ratio'], config['seed'])
 
 print(f"""
@@ -160,14 +169,14 @@ valid_data_size: {valid_data.shape}
 test_data_size: {test_data.shape}
 """)
 x_train, x_valid, x_test, y_train, y_valid = select_feature(train_data, valid_data, test_data, config['select_all'])
-
+# to decide if you remove some data then see if it's better
 print(f'number of features:{x_train.shape[1]}')
-
 train_dataset, valid_dataset, test_dataset = COVID19Dataset(x_train, y_train), COVID19Dataset(x_valid, y_valid), \
                                              COVID19Dataset(x_test)
 train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
 valid_loader = DataLoader(valid_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False, pin_memory=True)
 
-model = My_Model(input_dim=x_train.shape[1]).to(device)
-trainer(train_loader, valid_loader, model, config, device)
+if __name__ == '__main__':
+    model = My_Model(input_dim=x_train.shape[1]).to(device)
+    trainer(train_loader, valid_loader, model, config, device)
