@@ -14,4 +14,4 @@ def save_pred(preds, file):
 model = My_Model(input_dim=x_train.shape[1]).to(device)
 model.load_state_dict(torch.load(config['save_path']))
 preds = predict(test_loader, model, device)
-save_pred(preds, 'preds13.csv')
+save_pred(preds, 'preds20.csv')

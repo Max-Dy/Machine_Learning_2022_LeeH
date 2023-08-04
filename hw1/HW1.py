@@ -71,11 +71,10 @@ class My_Model(nn.Module):
         # dataloder generate a batch of x and feed to the model
         super(My_Model, self).__init__()
         self.layers = nn.Sequential(
-            nn.Linear(input_dim, 16),  # x (3,1), W (1, 3), --- Wx (1, 1), fully connection and shrimped
-            nn.ReLU(),  # unlinear change
-            nn.Linear(16, 8),
-            nn.ReLU(),
-            nn.Linear(8, 1)  # here for each input, output is a scalar
+            nn.Linear(input_dim, 256),  # x (3,1), W (1, 3), --- Wx (1, 1), fully connection and shrimped
+            nn.Dropout(0.4),
+            nn.LeakyReLU(),  # unlinear change
+            nn.Linear(256, 1),  # here for each input, output is a scalar
             # for an input with batch size = B, then output goes (B, 1), so we need squeeze in forward func.
         )
 
@@ -116,7 +115,7 @@ def select_feature(t_data, v_data, test_data, select_all=True):
 
 def trainer(train_loader, valid_loader, model, config, device):
     criterion = nn.MSELoss(reduction='mean')  # 1nn
-    optimizer = torch.optim.SGD(model.parameters(), lr=config['learning_rate'], momentum=0.9)  # 2
+    optimizer = torch.optim.AdamW(model.parameters(), weight_decay=5e-5)  # 2
     writer = SummaryWriter()  # to draw loss during trainning
 
     if not os.path.isdir('./models'):
@@ -169,13 +168,13 @@ def trainer(train_loader, valid_loader, model, config, device):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config = {
     'seed': 5201314, 'select_all': False, "valid_ratio": 0.20, "n_epochs": 3000, "batch_size": 128,
-    "learning_rate": 1e-5,
-    'early_stop': 400, "save_path": './models/model13.ckpt'
+    "learning_rate": 9e-6,
+    'early_stop': 400, "save_path": './models/model20.ckpt'
 }
 
 # load data
 same_seed(config['seed'])
-train_data, test_data = pd.read_csv('./covid.train_new.csv').values, pd.read_csv('./covid.test_un.csv').values
+train_data, test_data = pd.read_csv('./covid.train.csv').values, pd.read_csv('./covid.test.csv').values
 # .values---transfer DataFrame to nparray while get rid of listname&index
 train_data, valid_data = train_valid_split(train_data, config['valid_ratio'], config['seed'])
 
