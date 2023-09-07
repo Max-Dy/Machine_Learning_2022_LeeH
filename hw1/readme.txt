@@ -24,3 +24,6 @@ based on 04:
 20, leakyrelu, dropout, ...
 
 # 5, 13, 15, 18, 19,
+
+Show loss online with tensorboard:
+tensorboard --logdir "./hw1/runs/recall"

@@ -8,7 +8,7 @@ import csv
 
 import tensorboard
 from sympy.utilities.iterables import runs
-from tqdm import tqdm  # for showing of the
+from tqdm import tqdm  # for showing the loss
 
 import torch
 import torch.nn as nn
@@ -34,7 +34,7 @@ def train_valid_split(data_set, valid_ratio, seed):
 
 
 def predict(test_loader, model, device):
-    model.eval()
+    model.eval()  # predict mode
     preds = []
     for x in tqdm(test_loader):  # tqdm is for progress bar showing
         x = x.to(device)
@@ -51,7 +51,7 @@ class COVID19Dataset(Dataset):
         if y is None:
             self.y = y
         else:
-            self.y = torch.FloatTensor(y)
+            self.y = torch.FloatTensor(y)  # type consistency
         self.x = torch.FloatTensor(x)
 
     def __getitem__(self, idx):
@@ -114,9 +114,9 @@ def select_feature(t_data, v_data, test_data, select_all=True):
 # train
 
 def trainer(train_loader, valid_loader, model, config, device):
-    criterion = nn.MSELoss(reduction='mean')  # 1nn
+    criterion = nn.MSELoss(reduction='mean')  # 1
     optimizer = torch.optim.AdamW(model.parameters(), weight_decay=5e-5)  # 2
-    writer = SummaryWriter()  # to draw loss during trainning
+    writer = SummaryWriter()  # to draw loss during training
 
     if not os.path.isdir('./models'):
         os.makedirs('./models')
@@ -169,7 +169,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 config = {
     'seed': 5201314, 'select_all': False, "valid_ratio": 0.20, "n_epochs": 3000, "batch_size": 128,
     "learning_rate": 9e-6,
-    'early_stop': 400, "save_path": './models/model20.ckpt'
+    'early_stop': 400, "save_path": './models/model_recall.ckpt'
 }
 
 # load data

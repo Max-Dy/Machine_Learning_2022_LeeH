@@ -38,7 +38,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
-  <component name="RunManager" selected="Python.HW1">
+  <component name="RunManager" selected="Python.HW1_test">
     <configuration name="HW1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Machine_Learning_2022_LeeH" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -83,8 +83,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.HW1" />
         <item itemvalue="Python.HW1_test" />
+        <item itemvalue="Python.HW1" />
       </list>
     </recent_temporary>
   </component>
